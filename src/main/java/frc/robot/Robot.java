@@ -5,6 +5,10 @@
 package frc.robot;
 
 import edu.wpi.first.wpilibj.TimedRobot;
+import edu.wpi.first.wpilibj.XboxController;
+import frc.robot.Actors.Motor;
+import frc.robot.Utils.MotorType;
+import frc.robot.Utils.RotationDir;
 
 /**
  * The methods in this class are called automatically corresponding to each
@@ -14,6 +18,8 @@ import edu.wpi.first.wpilibj.TimedRobot;
  * this project, you must also update the Main.java file in the project.
  */
 public class Robot extends TimedRobot {
+  public static Motor motor;
+  public static XboxController driverController;
 
   /**
    * This function is run when the robot is first started up and should be used
@@ -21,7 +27,11 @@ public class Robot extends TimedRobot {
    * initialization code.
    */
   public Robot() {
-    
+    driverController = new XboxController(0);
+
+    motor = new Motor(1, MotorType.SPX);
+    motor.motorConfig.direction = RotationDir.CounterClockwise;
+    motor.applyConfig();
   }
 
   @Override
@@ -42,6 +52,7 @@ public class Robot extends TimedRobot {
 
   @Override
   public void teleopPeriodic() {
+    motor.dc(driverController.getLeftTriggerAxis());
   }
 
   @Override

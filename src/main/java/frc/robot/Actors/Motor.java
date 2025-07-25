@@ -4,14 +4,18 @@ import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.PositionDutyCycle;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.InvertedValue;
+import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.revrobotics.spark.ClosedLoopSlot;
 import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.spark.SparkBase.PersistMode;
 import com.revrobotics.spark.SparkBase.ResetMode;
 import com.revrobotics.spark.config.SparkMaxConfig;
+import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.SparkMax;
 
 import frc.robot.Utils.MotorType;
+import frc.robot.Utils.RotationDir;
 
 public class Motor {
     public MotorType type;
@@ -20,6 +24,7 @@ public class Motor {
     public Slot0Configs slot0TFX;
     public SparkMax motorSPX;
     public SparkMaxConfig configSPX;
+    public MotorConfig motorConfig;
     public int CanID;
 
     public Motor(int CanID, MotorType type) {
@@ -38,8 +43,10 @@ public class Motor {
                 break;
             case None:
                 System.err.println("Motor initialized with None type with CanID " + this.CanID);
-
         }
+
+        this.motorConfig = new MotorConfig();
+        this.applyConfig();
     }
 
     /**
@@ -143,7 +150,7 @@ public class Motor {
      * @param d derivative
      */
     public void pid(double p, double i, double d) {
-        switch (this.type) {
+        switch (type) {
             case SPX:
                 configSPX.closedLoop.pid(p, i, d);
                 motorSPX.configure(configSPX, ResetMode.kNoResetSafeParameters,
@@ -160,7 +167,27 @@ public class Motor {
         }
     }
 
-    public void peakDC(double dc) {
-        
+    public void applyConfig() {
+        switch (this.type) {
+            case SPX:
+                this.configSPX.inverted(this.motorConfig.direction == RotationDir.Clockwise);
+                this.configSPX.idleMode((this.motorConfig.brake) ? IdleMode.kBrake : IdleMode.kCoast);
+                this.motorSPX.configure(configSPX, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+                break;
+            case TFX:
+                this.configTFX.MotorOutput.PeakForwardDutyCycle = this.motorConfig.peakForwardDC;
+                this.configTFX.MotorOutput.PeakReverseDutyCycle = this.motorConfig.peakReverseDC;
+                this.configTFX.MotorOutput.Inverted = (this.motorConfig.direction == RotationDir.Clockwise)
+                        ? InvertedValue.Clockwise_Positive
+                        : InvertedValue.CounterClockwise_Positive;
+                this.configTFX.MotorOutput.NeutralMode = (this.motorConfig.brake) ? NeutralModeValue.Brake
+                        : NeutralModeValue.Coast;
+                this.configTFX.HardwareLimitSwitch.ForwardLimitEnable = this.motorConfig.forwardLimitSwitchEnabled;
+                this.configTFX.HardwareLimitSwitch.ReverseLimitEnable = this.motorConfig.reverseLimitSwitchEnabled;
+                this.motorTFX.getConfigurator().apply(configTFX);
+                break;
+            case None:
+                System.err.println("tried to apply motor config on None motor with CanID " + this.CanID);
+        }
     }
 }
