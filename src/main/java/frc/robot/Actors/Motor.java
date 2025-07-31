@@ -25,11 +25,35 @@ public class Motor {
     public SparkMax motorSPX;
     public SparkMaxConfig configSPX;
     public MotorConfig motorConfig;
+    public String actuatorName = "not_set";
     public int CanID;
 
     public Motor(int CanID, MotorType type) {
         this.CanID = CanID;
         this.type = type;
+
+        switch (type) {
+            case SPX:
+                this.motorSPX = new SparkMax(CanID, com.revrobotics.spark.SparkLowLevel.MotorType.kBrushless);
+                this.configSPX = new SparkMaxConfig();
+                break;
+            case TFX:
+                this.motorTFX = new TalonFX(CanID);
+                this.configTFX = new TalonFXConfiguration();
+                this.slot0TFX = new Slot0Configs();
+                break;
+            case None:
+                System.err.println("Motor initialized with None type with CanID " + this.CanID);
+        }
+
+        this.motorConfig = new MotorConfig();
+        this.applyConfig();
+    }
+
+    public Motor(int CanID, MotorType type, String actuatorName) {
+        this.CanID = CanID;
+        this.type = type;
+        this.actuatorName = actuatorName;
 
         switch (type) {
             case SPX:
@@ -143,6 +167,52 @@ public class Motor {
     }
 
     /**
+     * tells the motor that wherever it is is the value passed to it
+     * 
+     * @param position the pos to set the encoder value to
+     */
+    public void resetPos(double position) {
+        switch (this.type) {
+            case SPX:
+                this.motorSPX.getEncoder().setPosition(position);
+            case TFX:
+                this.motorTFX.setPosition(position);
+            default:
+                System.err.println("tried to reset pos on None motor with CanID " + this.CanID);
+        }
+    }
+
+    /**
+     * gives current rotor velocity in RpS
+     * @return the motor velocity
+     */
+    public double vel() {
+        switch (this.type) {
+            case SPX:
+                return this.motorSPX.getEncoder().getVelocity();
+            case TFX:
+                return this.motorTFX.getVelocity().getValueAsDouble();
+            default:
+                return 0.0;
+        }
+    }
+
+    /**
+     * gets if there are currently any faults oon the motor
+     * @return
+     */
+    public boolean isFault() {
+        switch (this.type) {
+            case SPX:
+                return (short) 0 != motorSPX.getFaults().rawBits;
+            case TFX:
+                return 0 != motorTFX.getFaultField().getValueAsDouble();
+            default:
+                return false;
+        }
+    }
+
+    /**
      * Sets the PID of the motor
      * 
      * @param p proportional
@@ -164,6 +234,18 @@ public class Motor {
                 break;
             case None:
                 System.err.println("tried to set pid on None motor with CanID " + this.CanID);
+        }
+    }
+
+    /**
+     * set it to brake or coast, doesn't cause performance hit if the value isn't different
+     * 
+     * @param brake true for brake, false for coast
+     */
+    public void setBrake(boolean brake) {
+        if (brake != this.motorConfig.brake) {
+            this.motorConfig.brake = brake;
+            this.applyConfig();
         }
     }
 
