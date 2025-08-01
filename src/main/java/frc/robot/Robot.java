@@ -7,6 +7,7 @@ package frc.robot;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.XboxController;
 import frc.robot.Actors.Motor;
+import frc.robot.Subsystems.CoralIntake;
 import frc.robot.Utils.MotorType;
 import frc.robot.Utils.RotationDir;
 
@@ -19,6 +20,7 @@ import frc.robot.Utils.RotationDir;
  */
 public class Robot extends TimedRobot {
   public static Motor motor;
+  public static CoralIntake intake;
   public static XboxController driverController;
 
   /**
