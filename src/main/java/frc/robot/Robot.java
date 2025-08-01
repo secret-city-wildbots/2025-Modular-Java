@@ -12,6 +12,7 @@ import edu.wpi.first.wpilibj2.command.CommandScheduler;
 
 // Import Custom Libraries
 import frc.robot.Actors.Motor;
+import frc.robot.Subsystems.CoralIntake;
 import frc.robot.Utils.MotorType;
 import frc.robot.Utils.RotationDir;
 
@@ -22,6 +23,7 @@ import frc.robot.Utils.RotationDir;
  */
 public class Robot extends TimedRobot {
   public static Motor motor;
+  public static CoralIntake intake;
   public static XboxController driverController;
 
   private Command autonomousCommand;
