@@ -1,14 +1,10 @@
 package frc.robot.Actors;
 
-import com.revrobotics.RelativeEncoder;
-
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.util.Units;
-import edu.wpi.first.wpilibj.XboxController;
-import frc.robot.Subsystems.Drivetrain;
 import frc.robot.Utils.MotorType;
 
 public class SwerveModule {
@@ -21,9 +17,8 @@ public class SwerveModule {
     private Motor azimuth;
 
     private double currentDriveSpeed_mPs = 0;
-    private double azimuthAngle_rad = 0;
+    private double currentAzimuthAngle_rad = 0;
     private int shiftedState = 0;
-    private boolean failure = false;
 
     public SwerveModule(int moduleNumber, double[] driveGearRatios, double azimuthGearRatio, double wheelRadius_m) {
         this.moduleNumber = moduleNumber;
@@ -37,14 +32,19 @@ public class SwerveModule {
         this.azimuth.pid(0.12, 0.0, 0.0);
     }
 
-    public SwerveModuleState updateSensors(XboxController drivercontroller) {
-        azimuthAngle_rad = Units.rotationsToRadians(azimuth.pos() / azimuthGearRatio);
+    /**
+     * updates the internal current state of the swerve module.
+     * 
+     * @return the current swerveModuleState of the module
+     */
+    public SwerveModuleState getCurrentState() {
+        currentAzimuthAngle_rad = Units.rotationsToRadians(azimuth.pos() / azimuthGearRatio);
         currentDriveSpeed_mPs = drive.vel()
                 / driveGearRatios[shiftedState] * 2
                 * Math.PI
                 * wheelRadius_m;
 
-        return new SwerveModuleState(currentDriveSpeed_mPs, new Rotation2d(azimuthAngle_rad));
+        return new SwerveModuleState(currentDriveSpeed_mPs, new Rotation2d(currentAzimuthAngle_rad));
     }
 
     /**
@@ -61,7 +61,7 @@ public class SwerveModule {
                 rotation);
     }
 
-        /**
+    /**
      * Gets any faults from the drive and azimuth motors
      * 
      * @return A boolean array with the structure:
@@ -73,20 +73,45 @@ public class SwerveModule {
         return new boolean[] { drive.isFault(), azimuth.isFault() };
     }
 
-    public void pushModuleState(SwerveModuleState moduleState, boolean calibrateWheels, boolean unlockWheels) {
-        moduleState.optimize(new Rotation2d(azimuthAngle_rad));
+    public void pushModuleState(SwerveModuleState moduleState, double maxGroundSpeed_mPs, boolean calibrateWheels,
+            boolean unlockWheels) {
+        moduleState.optimize(new Rotation2d(currentAzimuthAngle_rad));
 
         // Wrapping the angle to allow for "continuous input"
-        double minDistance = MathUtil.angleModulus(moduleState.angle.getRadians() - azimuthAngle_rad);
-        double normalAzimuthOutput_rot = Units.radiansToRotations(azimuthAngle_rad + minDistance) * moduleState.angle.getRadians();
+        double minDistance = MathUtil.angleModulus(moduleState.angle.getRadians() - currentAzimuthAngle_rad);
+        double normalAzimuthOutput_rot = Units.radiansToRotations(currentAzimuthAngle_rad + minDistance)
+                * moduleState.angle.getRadians();
 
         if (calibrateWheels) {
             azimuth.resetPos(0.0);
         }
 
-        azimuth.setBrake(unlockWheels);
+        azimuth.setBrake(!unlockWheels); // invert bc unlock != lock
 
         azimuth.pos(normalAzimuthOutput_rot);
+
+        // Output drive
+        double driveOutput = moduleState.speedMetersPerSecond / maxGroundSpeed_mPs;
+
+        driveOutput *= moduleState.angle.minus(new Rotation2d(currentAzimuthAngle_rad)).getCos();
+
+        drive.dc(driveOutput);
+    }
+
+    /**
+     * Temperature of drive motor
+     * 
+     * <ul>
+     * <li><b>Minimum Value:</b> 0.0
+     * <li><b>Maximum Value:</b> 255.0
+     * <li><b>Default Value:</b> 0
+     * <li><b>Units:</b> ℃
+     * </ul>
+     * 
+     * @return Double temperature in degrees Celcius
+     */
+    public double getTemp() {
+        return drive.getTemp();
     }
 
 }

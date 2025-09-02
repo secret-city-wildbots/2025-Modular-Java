@@ -212,6 +212,17 @@ public class Motor {
         }
     }
 
+    public double getTemp() {
+        switch (this.type) {
+            case SPX:
+                return motorSPX.getMotorTemperature();
+            case TFX:
+                return motorTFX.getDeviceTemp().getValueAsDouble();
+            default:
+                return 0.0;
+        }
+    }
+
     /**
      * Sets the PID of the motor
      * 
@@ -239,13 +250,25 @@ public class Motor {
 
     /**
      * set it to brake or coast, doesn't cause performance hit if the value isn't different
+     * or if it is a TolonFX Motor, as TFX has a way of setting to idleMode
+     * without pushing the configs, allowing better performance
      * 
      * @param brake true for brake, false for coast
      */
     public void setBrake(boolean brake) {
         if (brake != this.motorConfig.brake) {
-            this.motorConfig.brake = brake;
-            this.applyConfig();
+            switch (type) {
+                case SPX:
+                    this.motorConfig.brake = brake;
+                    this.applyConfig();
+                    break;
+                case TFX:
+                    this.motorConfig.brake = brake;
+                    this.motorTFX.setNeutralMode((brake) ? NeutralModeValue.Brake:NeutralModeValue.Coast);
+                    break;
+                case None:
+                    System.err.println("tried to set brake mode on None motor with CanID " + this.CanID);
+            }
         }
     }
 
