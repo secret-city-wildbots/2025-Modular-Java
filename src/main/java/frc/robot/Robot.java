@@ -12,7 +12,7 @@ import edu.wpi.first.wpilibj2.command.CommandScheduler;
 
 // Import Custom Libraries
 import frc.robot.Actors.Motor;
-import frc.robot.Subsystems.CoralIntake;
+import frc.robot.Actors.Subsystems.Intake;
 import frc.robot.Utils.MotorType;
 import frc.robot.Utils.RotationDir;
 
@@ -22,9 +22,6 @@ import frc.robot.Utils.RotationDir;
  * package after creating this project, you must also update the Main.java file in the project.
  */
 public class Robot extends TimedRobot {
-  public static Motor motor;
-  public static CoralIntake intake;
-  public static XboxController driverController;
 
   private Command autonomousCommand;
 
@@ -33,11 +30,6 @@ public class Robot extends TimedRobot {
    * for any initialization code.
    */
   public Robot() {
-    driverController = new XboxController(0);
-
-    motor = new Motor(1, MotorType.SPX);
-    motor.motorConfig.direction = RotationDir.CounterClockwise;
-    motor.applyConfig();
   }
 
   @Override
@@ -78,7 +70,7 @@ public class Robot extends TimedRobot {
 
   @Override
   public void teleopPeriodic() {
-    motor.dc(driverController.getLeftTriggerAxis());
+    
   }
 
   @Override
