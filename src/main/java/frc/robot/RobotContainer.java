@@ -19,7 +19,6 @@ import frc.robot.Commands.Intake.*;
 // import frc.robot.commands.pivot.*;
 
 // Import WPILib Command Libraries
-import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 
@@ -54,18 +53,15 @@ public class RobotContainer {
    * joysticks}.
    */
   private void configureBindings() {
-    System.out.println("IN HERE");
-    // Schedule `IntakeCoralCommand` when the Xbox controller's rightTrigger button is pressed, cancel on release
-    // Schedule `ScoreCoralCommand` when the Xbox controller's rightTrigger button is pressed, cancel on release
-    driveController.rightTrigger().whileTrue(new IntakeCoralCommand(intake));
+    // Schedule `IntakeCoralCommand` when the Xbox controller's leftBumper button is pressed, cancel on release
+    // Schedule `OuttakeCoralCommand` when the Xbox controller's leftTrigger button is pressed, cancel on release
+    driveController.leftBumper().whileTrue(new IntakeCoralCommand(intake));
     driveController.leftTrigger().whileTrue(new OuttakeCoralCommand(intake));
 
-    // Schedule `IntakeAlgaeCommand` when the Xbox controller's rightBumper button is pressed, cancel on release
-    // Schedule `ScoreAlgaeCommand` when the Xbox controller's leftBumper button is pressed, cancel on release
-    // driveController.rightBumper().whileTrue(new IntakeAlgaeCommand(intake));
-    // driveController.leftBumper().whileTrue(new OuttakeAlgaeCommand(intake));
-
-    
+    // Schedule `IntakeAlgaeCommand` when the Xbox controller's rightBumper button is pressed, continues on press
+    // Schedule `OuttakeAlgaeCommand` when the Xbox controller's rightTrigger button is pressed, cancel on release, also cancels intake
+    driveController.rightBumper().onTrue(new IntakeAlgaeCommand(intake));
+    driveController.rightTrigger().whileTrue(new OuttakeAlgaeCommand(intake));
   }
 }
 

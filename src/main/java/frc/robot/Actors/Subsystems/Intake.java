@@ -5,7 +5,6 @@ import frc.robot.Actors.Motor;
 import frc.robot.Utils.MotorType;
 // External Library imports
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import edu.wpi.first.wpilibj2.command.Command;
 
 public class Intake extends SubsystemBase {
     private Motor motor;
@@ -31,7 +30,7 @@ public class Intake extends SubsystemBase {
      * Sets the intake motor to spin spin in the direction to intake a coral piece
      */
     public void intakeCoral() {
-        this.motor.dc(1.0);
+        this.motor.dc(0.2);
         intaking = true;
         outtaking = false;
     }
@@ -40,7 +39,7 @@ public class Intake extends SubsystemBase {
      * Sets the intake motor to spin spin in the direction to outtake a coral piece 
      */
     public void outtakeCoral() {
-        this.motor.dc(-1.0);
+        this.motor.dc(-0.2);
         intaking = false;
         outtaking = true;
     }
@@ -49,16 +48,16 @@ public class Intake extends SubsystemBase {
      * Sets the intake motor to spin spin in the direction to intake an algae piece
      */
     public void intakeAlgae() {
-        this.motor.dc(-1.0);
+        this.motor.dc(-0.4);
         intaking = true;
         outtaking = false;
     }
 
     /**
-     * Sets the intake motor to spin spin in the direction to outtake an algae piece 
+     * Sets the intake Fotor to spin spin in the direction to outtake an algae piece 
      */
     public void outtakeAlgae() {
-        this.motor.dc(1.0);
+        this.motor.dc(0.4);
         intaking = false;
         outtaking = true;
     }

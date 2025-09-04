@@ -25,11 +25,14 @@ public class Robot extends TimedRobot {
 
   private Command autonomousCommand;
 
+  private final RobotContainer m_robotContainer;
+
   /**
    * This function is run when the robot is first started up and should be used
    * for any initialization code.
    */
   public Robot() {
+    m_robotContainer = new RobotContainer();
   }
 
   @Override
