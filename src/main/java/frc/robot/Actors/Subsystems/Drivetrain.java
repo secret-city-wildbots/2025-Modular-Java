@@ -95,7 +95,7 @@ public class Drivetrain extends SubsystemBase {
         // Setup the odometry tracking
         this.odometry = new SwerveDriveOdometry(
           this.swerveKinematics,
-          this.pigeon.getRotation2d(),
+          this.pigeon.getRotation2d().unaryMinus(),
           swerveModules.getPosition()
         );
     }
@@ -104,9 +104,11 @@ public class Drivetrain extends SubsystemBase {
     public void periodic() {
         // Update the odometry in the periodic block
         this.odometry.update(
-            this.pigeon.getRotation2d(),
+            this.pigeon.getRotation2d().unaryMinus(),
             this.swerveModules.getPosition()
         );
+
+        System.out.println(this.pigeon.getRotation2d().unaryMinus().getDegrees());
     }
 
     /**
@@ -125,7 +127,7 @@ public class Drivetrain extends SubsystemBase {
      */
     public void resetOdometry(Pose2d pose) {
         this.odometry.resetPosition(
-            this.pigeon.getRotation2d(),
+            this.pigeon.getRotation2d().unaryMinus(),
             this.swerveModules.getPosition(),    
             pose
         );
@@ -157,7 +159,8 @@ public class Drivetrain extends SubsystemBase {
                 xpow * DrivetrainConstants.maxGroundSpeed_mPs,
                 ypow * DrivetrainConstants.maxGroundSpeed_mPs,
                 hpow * DrivetrainConstants.maxRotateSpeed_radPs,
-                this.pigeon.getRotation2d()
+                // Converting pigeon from left hand rule (x+) to a right hand rule (x+)
+                this.pigeon.getRotation2d().unaryMinus()
                 ),
                 0.001 * RobotConstants.loopTime_ms
             )

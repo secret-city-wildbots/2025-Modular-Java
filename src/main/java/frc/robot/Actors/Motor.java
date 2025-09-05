@@ -41,6 +41,7 @@ public class Motor {
                 this.motorTFX = new TalonFX(CanID);
                 this.configTFX = new TalonFXConfiguration();
                 this.slot0TFX = new Slot0Configs();
+                this.motorTFX.getConfigurator().setPosition(0);
                 break;
             case None:
                 System.err.println("Motor initialized with None type with CanID " + this.CanID);
@@ -64,6 +65,7 @@ public class Motor {
                 this.motorTFX = new TalonFX(CanID);
                 this.configTFX = new TalonFXConfiguration();
                 this.slot0TFX = new Slot0Configs();
+                this.motorTFX.getConfigurator().setPosition(0);
                 break;
             case None:
                 System.err.println("Motor initialized with None type with CanID " + this.CanID);
