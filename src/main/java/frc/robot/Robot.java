@@ -6,15 +6,8 @@ package frc.robot;
 
 // Import External Libraries
 import edu.wpi.first.wpilibj.TimedRobot;
-import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
-
-// Import Custom Libraries
-import frc.robot.Actors.Motor;
-import frc.robot.Actors.Subsystems.Intake;
-import frc.robot.Utils.MotorType;
-import frc.robot.Utils.RotationDir;
 
 /**
  * The methods in this class are called automatically corresponding to each

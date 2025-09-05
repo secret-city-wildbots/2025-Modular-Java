@@ -10,13 +10,12 @@ import frc.robot.Constants.OperatorConstants;
 
 // Import Subsystems
 import frc.robot.Actors.Subsystems.Intake;
-// import frc.robot.Actors.Subsystems.Pivot;
-// import frc.robot.Actors.Subsystems.Pivot2;
+import frc.robot.Actors.Subsystems.Pivot;
 
 // Import Commands
 // import frc.robot.commands.auto.Autos;
 import frc.robot.Commands.Intake.*;
-// import frc.robot.commands.pivot.*;
+import frc.robot.Commands.pivot.*;
 
 // Import WPILib Command Libraries
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
@@ -31,8 +30,7 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 public class RobotContainer {
   // The robot's subsystems and commands are defined here...
   private final Intake intake = new Intake(0);
-//   private final Pivot pivot = new Pivot(2, 3);
-//   private final Pivot2 pivot2 = new Pivot2(4, 0);
+  private final Pivot pivot = new Pivot(1, 0);
 
   // Instantiate a Command Xbox Controller
   private final CommandXboxController driveController = new CommandXboxController(OperatorConstants.kDriverControllerPort);
@@ -62,6 +60,11 @@ public class RobotContainer {
     // Schedule `OuttakeAlgaeCommand` when the Xbox controller's rightTrigger button is pressed, cancel on release, also cancels intake
     driveController.rightBumper().onTrue(new IntakeAlgaeCommand(intake));
     driveController.rightTrigger().whileTrue(new OuttakeAlgaeCommand(intake));
+
+    // Schedule `PivotToPositionCommand` when the Xbox controller's D-Pad Left button is pressed. Will run until the isFinished condition is met.
+    // Schedule `PivotToPositionCommand` when the Xbox controller's D-Pad Right button is pressed. Will run until the isFinished condition is met.
+    driveController.povLeft().onTrue(new PivotToPositionCommand(pivot, 50.0));
+    driveController.povRight().onTrue(new PivotToPositionCommand(pivot, 90.0));
   }
 }
 
