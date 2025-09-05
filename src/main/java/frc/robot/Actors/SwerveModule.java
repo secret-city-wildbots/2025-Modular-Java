@@ -8,6 +8,7 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.XboxController;
 import frc.robot.Actors.Subsystems.Drivetrain;
 import frc.robot.Utils.MotorType;
+import frc.robot.Utils.RotationDir;
 
 public class SwerveModule {
     private final int moduleNumber;
@@ -20,7 +21,7 @@ public class SwerveModule {
 
     private double currentDriveSpeed_mPs = 0;
     private double currentAzimuthAngle_rad = 0;
-    private int shiftedState = 0;
+    public int shiftedState = 0;
 
     public SwerveModule(int moduleNumber, double[] driveGearRatios, double azimuthGearRatio, double wheelRadius_m) {
         this.moduleNumber = moduleNumber;
@@ -30,6 +31,14 @@ public class SwerveModule {
 
         this.drive = new Motor(10 + moduleNumber, MotorType.TFX);
         this.azimuth = new Motor(20 + moduleNumber, MotorType.TFX);
+
+        if (moduleNumber >= 1) {
+            this.drive.motorConfig.direction = RotationDir.CounterClockwise;
+        } else if (moduleNumber == 0) {
+            this.drive.motorConfig.direction = RotationDir.Clockwise;
+        }
+
+        this.drive.applyConfig();
 
         this.azimuth.pid(0.12, 0.0, 0.0);
     }
@@ -75,21 +84,19 @@ public class SwerveModule {
         return new boolean[] { drive.isFault(), azimuth.isFault() };
     }
 
-    public void pushModuleState(SwerveModuleState moduleState, double maxGroundSpeed_mPs, boolean calibrateWheels,
-            boolean unlockWheels) {
+    public void pushModuleState(SwerveModuleState moduleState, double maxGroundSpeed_mPs) {
+        
+
         moduleState.optimize(new Rotation2d(currentAzimuthAngle_rad));
 
         // Wrapping the angle to allow for "continuous input"
         double minDistance = MathUtil.angleModulus(moduleState.angle.getRadians() - currentAzimuthAngle_rad);
         double normalAzimuthOutput_rot = Units.radiansToRotations(currentAzimuthAngle_rad + minDistance)
-                * moduleState.angle.getRadians();
+                * this.azimuthGearRatio;
 
-        if (calibrateWheels) {
-            azimuth.resetPos(0.0);
+        if (this.moduleNumber == 0) {
+            System.out.println(normalAzimuthOutput_rot);
         }
-
-        azimuth.setBrake(!unlockWheels); // invert bc unlock != lock
-
         azimuth.pos(normalAzimuthOutput_rot);
 
         // Output drive
@@ -97,7 +104,15 @@ public class SwerveModule {
 
         driveOutput *= moduleState.angle.minus(new Rotation2d(currentAzimuthAngle_rad)).getCos();
 
-        drive.dc(driveOutput);
+        drive.dc(0);
+    }
+
+    public void pushLockState(boolean calibrateWheels, boolean unlockWheels) {
+        if (calibrateWheels) {
+            azimuth.resetPos(0.0);
+        }
+
+        azimuth.setBrake(!unlockWheels); // invert bc unlock != lock
     }
 
     /**

@@ -4,6 +4,8 @@
 
 package frc.robot;
 
+import com.ctre.phoenix6.hardware.Pigeon2;
+
 // Import External Libraries
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.XboxController;
@@ -15,13 +17,22 @@ import frc.robot.Actors.Motor;
 import frc.robot.Actors.Subsystems.Intake;
 import frc.robot.Utils.MotorType;
 import frc.robot.Utils.RotationDir;
+import frc.robot.Actors.Subsystems.Drivetrain;
+import frc.robot.Utils.Limelight;
 
 /**
  * The methods in this class are called automatically corresponding to each
- * mode, as described in the TimedRobot documentation. If you change the name of this class or the
- * package after creating this project, you must also update the Main.java file in the project.
+ * mode, as described in the TimedRobot documentation. If you change the name of
+ * this class or the
+ * package after creating this project, you must also update the Main.java file
+ * in the project.
  */
 public class Robot extends TimedRobot {
+  public static double[] swerveSpacing_in = {24, 24};
+
+  public static XboxController driverController;
+  public static Pigeon2 pigeon;
+  public static Drivetrain drivetrain;
 
   private Command autonomousCommand;
 
@@ -33,21 +44,37 @@ public class Robot extends TimedRobot {
    */
   public Robot() {
     m_robotContainer = new RobotContainer();
+
+    //Jaspers stuff
+    driverController = new XboxController(0);
+    pigeon = new Pigeon2(6);
+    Limelight[] limelights = {};
+    double[] maxGroundSpeed = {5.0};
+    double[] driveGearRatios = {6.12};
+    double azimuthGearRatio = 150.0/7.0;
+
+    drivetrain = new Drivetrain(pigeon, limelights, swerveSpacing_in, maxGroundSpeed, driveGearRatios, azimuthGearRatio, 2.0);
   }
 
   @Override
   public void robotPeriodic() {
-    // Runs the Scheduler.  This is responsible for polling buttons, adding newly-scheduled
-    // commands, running already-scheduled commands, removing finished or interrupted commands,
-    // and running subsystem periodic() methods.  This must be called from the robot's periodic
+    // Runs the Scheduler. This is responsible for polling buttons, adding
+    // newly-scheduled
+    // commands, running already-scheduled commands, removing finished or
+    // interrupted commands,
+    // and running subsystem periodic() methods. This must be called from the
+    // robot's periodic
     // block in order for anything in the Command-based framework to work.
-    CommandScheduler.getInstance().run();
+    //CommandScheduler.getInstance().run();
+
+    drivetrain.updateState();
   }
 
   @Override
   public void autonomousInit() {
     // TODO: Setup the configuration and selection of the autonomous command
-    // TODO: Uncomment the line below for the setup and put in the proper code to make it function correctly.
+    // TODO: Uncomment the line below for the setup and put in the proper code to
+    // make it function correctly.
     // autonomousCommand = m_robotContainer.getAutonomousCommand();
 
     // schedule the autonomous command (example)
@@ -73,7 +100,14 @@ public class Robot extends TimedRobot {
 
   @Override
   public void teleopPeriodic() {
+<<<<<<< HEAD
     
+=======
+    drivetrain.drive(driverController.getLeftX(),
+        driverController.getLeftY(),
+        -driverController.getRightX(),
+        this.getPeriod());
+>>>>>>> e2ac6e1 (tons of added stuffs. still no worky :()
   }
 
   @Override
