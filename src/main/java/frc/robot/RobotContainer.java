@@ -6,21 +6,20 @@
 package frc.robot;
 
 // Import Constants
-import frc.robot.Constants.OperatorConstants;
+import frc.robot.Constants.*;
 
 // Import Subsystems
 import frc.robot.Actors.Subsystems.Intake;
-// import frc.robot.Actors.Subsystems.Pivot;
-// import frc.robot.Actors.Subsystems.Pivot2;
+import frc.robot.Actors.Subsystems.Drivetrain;
 
 // Import Commands
 // import frc.robot.commands.auto.Autos;
 import frc.robot.Commands.Intake.*;
-// import frc.robot.commands.pivot.*;
 
 // Import WPILib Command Libraries
-import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -31,16 +30,33 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 public class RobotContainer {
   // The robot's subsystems and commands are defined here...
   private final Intake intake = new Intake(0);
-//   private final Pivot pivot = new Pivot(2, 3);
-//   private final Pivot2 pivot2 = new Pivot2(4, 0);
+  private final Drivetrain drivetrain = new Drivetrain();
 
-  // Instantiate a Command Xbox Controller
-  private final CommandXboxController driveController = new CommandXboxController(OperatorConstants.kDriverControllerPort);
+  // Instantiate drive and manipulator Xbox Controllers
+  private final CommandXboxController driverController = new CommandXboxController(OperatorConstants.DriverControllerPort);
+  private final CommandXboxController manipulatorController = new CommandXboxController(OperatorConstants.ManipulatorControllerPort);
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
     // Configure the trigger bindings
     configureBindings();
+
+    // Configure default commands
+    drivetrain.setDefaultCommand(
+      // The left stick controls translation of the robot.
+      // Turning is controlled by the X axis of the right stick.
+      new RunCommand(
+        () ->
+        drivetrain.drive(
+          // Multiply by max speed to map the joystick unitless inputs to actual units.
+          // This will map the [-1, 1] to [max speed backwards, max speed forwards],
+          // converting them to actual units.
+          driverController.getLeftY(),
+          driverController.getLeftX(),
+          driverController.getRightX()
+        ), drivetrain
+      )
+    );
   }
 
   /**
@@ -55,13 +71,13 @@ public class RobotContainer {
   private void configureBindings() {
     // Schedule `IntakeCoralCommand` when the Xbox controller's leftBumper button is pressed, cancel on release
     // Schedule `OuttakeCoralCommand` when the Xbox controller's leftTrigger button is pressed, cancel on release
-    driveController.leftBumper().whileTrue(new IntakeCoralCommand(intake));
-    driveController.leftTrigger().whileTrue(new OuttakeCoralCommand(intake));
+    manipulatorController.leftBumper().whileTrue(new IntakeCoralCommand(intake));
+    manipulatorController.leftTrigger().whileTrue(new OuttakeCoralCommand(intake));
 
     // Schedule `IntakeAlgaeCommand` when the Xbox controller's rightBumper button is pressed, continues on press
     // Schedule `OuttakeAlgaeCommand` when the Xbox controller's rightTrigger button is pressed, cancel on release, also cancels intake
-    driveController.rightBumper().onTrue(new IntakeAlgaeCommand(intake));
-    driveController.rightTrigger().whileTrue(new OuttakeAlgaeCommand(intake));
+    manipulatorController.rightBumper().onTrue(new IntakeAlgaeCommand(intake));
+    manipulatorController.rightTrigger().whileTrue(new OuttakeAlgaeCommand(intake));
   }
 }
 

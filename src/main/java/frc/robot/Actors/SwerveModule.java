@@ -1,45 +1,53 @@
 package frc.robot.Actors;
 
+// Import CTRE Hardware Libraries
+import com.ctre.phoenix6.configs.TalonFXConfiguration;
+
+// Import WPI Libraries to help Swerve Drive Management
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
-import edu.wpi.first.math.util.Units;
-import edu.wpi.first.wpilibj.XboxController;
-import frc.robot.Actors.Subsystems.Drivetrain;
+import edu.wpi.first.wpilibj2.command.SubsystemBase;
+
+// Import Utils and Constants
 import frc.robot.Utils.MotorType;
-import frc.robot.Utils.RotationDir;
+import frc.robot.Constants.DrivetrainConstants;
 
-public class SwerveModule {
+public class SwerveModule extends SubsystemBase {
+    /*
+     * Module number for the FRC Robot - Help determine the CAN ID of the swerve module
+     * 
+     * 4265 Naming/ID Convention:
+     * Module 0 - Front Right (Drive Motor CAN ID - 10, Azimuth Motor CAN ID - 20)
+     * Module 1 - Front Right (Drive Motor CAN ID - 11, Azimuth Motor CAN ID - 21)
+     * Module 2 - Front Right (Drive Motor CAN ID - 12, Azimuth Motor CAN ID - 22)
+     * Module 3 - Front Right (Drive Motor CAN ID - 13, Azimuth Motor CAN ID - 23)
+     */
     private final int moduleNumber;
-    private final double[] driveGearRatios;
-    private final double azimuthGearRatio;
-    private final double wheelRadius_m;
 
+    // Define our drive and azimuth motors
     private Motor drive;
     private Motor azimuth;
 
+    // Setup variables for tracking the speed and angle of the module
     private double currentDriveSpeed_mPs = 0;
     private double currentAzimuthAngle_rad = 0;
-    public int shiftedState = 0;
 
-    public SwerveModule(int moduleNumber, double[] driveGearRatios, double azimuthGearRatio, double wheelRadius_m) {
+    public SwerveModule(int moduleNumber, TalonFXConfiguration driveMotorConfig, TalonFXConfiguration azimuthMotorConfig) {
+        // Set the module number of the swerve
         this.moduleNumber = moduleNumber;
-        this.driveGearRatios = driveGearRatios;
-        this.azimuthGearRatio = azimuthGearRatio;
-        this.wheelRadius_m = wheelRadius_m;
 
-        this.drive = new Motor(10 + moduleNumber, MotorType.TFX);
+        // Setup the drive motor configurations
+        this.drive = new Motor(10 + this.moduleNumber, MotorType.TFX);
+        this.drive.applyTalonFxConfig(driveMotorConfig);
+
+        // Setup the azimuth motor configurations
         this.azimuth = new Motor(20 + moduleNumber, MotorType.TFX);
+        this.azimuth.applyTalonFxConfig(azimuthMotorConfig);
 
-        if (moduleNumber >= 1) {
-            this.drive.motorConfig.direction = RotationDir.CounterClockwise;
-        } else if (moduleNumber == 0) {
-            this.drive.motorConfig.direction = RotationDir.Clockwise;
-        }
-
-        this.drive.applyConfig();
-
+        // Setup the Azimuth PID
         this.azimuth.pid(0.12, 0.0, 0.0);
     }
 
@@ -49,12 +57,15 @@ public class SwerveModule {
      * @return the current swerveModuleState of the module
      */
     public SwerveModuleState getCurrentState() {
-        currentAzimuthAngle_rad = Units.rotationsToRadians(azimuth.pos() / azimuthGearRatio);
+        // Calculate the current module angle in radians
+        currentAzimuthAngle_rad = Units.rotationsToRadians(azimuth.pos() / DrivetrainConstants.azimuthGearRatio);
+        // Calculate the current module wheel speein in meters / second
         currentDriveSpeed_mPs = drive.vel()
-                / driveGearRatios[shiftedState] * 2
-                * Math.PI
-                * wheelRadius_m;
+            / DrivetrainConstants.driveGearRatio * 2
+            * Math.PI
+            * DrivetrainConstants.wheelRadius_m;
 
+        // Return the swerve module state
         return new SwerveModuleState(currentDriveSpeed_mPs, new Rotation2d(currentAzimuthAngle_rad));
     }
 
@@ -64,12 +75,11 @@ public class SwerveModule {
      * @return A SwerveModulePosition object
      */
     public SwerveModulePosition getPosition() {
-        Rotation2d rotation = new Rotation2d(
-                (Units.rotationsToRadians(azimuth.pos() / azimuthGearRatio)));
+        // Calculate the swerve module position
         return new SwerveModulePosition(
-                (drive.pos() / driveGearRatios[shiftedState])
-                        * (2 * Math.PI * wheelRadius_m),
-                rotation);
+            (drive.pos() / DrivetrainConstants.driveGearRatio) * (2 * Math.PI * DrivetrainConstants.wheelRadius_m),
+            new Rotation2d((azimuth.pos() / DrivetrainConstants.azimuthGearRatio) * 2 * Math.PI)
+        );
     }
 
     /**
@@ -85,28 +95,49 @@ public class SwerveModule {
     }
 
     public void pushModuleState(SwerveModuleState moduleState, double maxGroundSpeed_mPs) {
-        
+        /*
+         * Determine the module states to create
+         */
+        // Get the encoderRotation and azimuth angle in radians
+        var encoderRotation = new Rotation2d(Units.rotationsToRadians(azimuth.pos() / DrivetrainConstants.azimuthGearRatio));
+        double azimuthAngle_rad = Units.rotationsToRadians(azimuth.pos() / DrivetrainConstants.azimuthGearRatio);
 
-        moduleState.optimize(new Rotation2d(currentAzimuthAngle_rad));
+        // Optimize the reference state to avoid spinning further than 90 degrees
+        moduleState.optimize(encoderRotation);
+
+        // TODO: I think we can uncomment this when we are actually driving the robot. The signal output I thinks goes to 0 when testing
+        // because the angle of the wheel is not being updated
+        // Scale speed by cosine of angle error. This scales down movement perpendicular to the desired
+        // direction of travel that can occur when modules change directions. This results in smoother
+        // driving.
+        //moduleState.cosineScale(encoderRotation);
 
         // Wrapping the angle to allow for "continuous input"
-        double minDistance = MathUtil.angleModulus(moduleState.angle.getRadians() - currentAzimuthAngle_rad);
-        double normalAzimuthOutput_rot = Units.radiansToRotations(currentAzimuthAngle_rad + minDistance)
-                * this.azimuthGearRatio;
+        double minDistance = MathUtil.angleModulus(moduleState.angle.getRadians() - azimuthAngle_rad);
 
-        if (this.moduleNumber == 0) {
-            System.out.println(normalAzimuthOutput_rot);
-        }
-        azimuth.pos(normalAzimuthOutput_rot);
+        /*
+         * Calculate the azimuth output
+         */
+        double normalAzimuthOutput_rot = Units.radiansToRotations(azimuthAngle_rad + minDistance)
+                * DrivetrainConstants.azimuthGearRatio;
 
+        /*
+         * Calculate the drive output
+         */
         // Output drive
         double driveOutput = moduleState.speedMetersPerSecond / maxGroundSpeed_mPs;
 
+        // TODO: Is this the same as: moduleState.cosineScale(encoderRotation) (LINE 113)
         driveOutput *= moduleState.angle.minus(new Rotation2d(currentAzimuthAngle_rad)).getCos();
 
-        drive.dc(0);
+        // Send the outputs to the drive and azimuth motors
+        azimuth.pos(normalAzimuthOutput_rot);
+        drive.dc(driveOutput);
     }
 
+    /**
+     * TODO: describe the purpose of this function
+     */
     public void pushLockState(boolean calibrateWheels, boolean unlockWheels) {
         if (calibrateWheels) {
             azimuth.resetPos(0.0);
@@ -130,5 +161,4 @@ public class SwerveModule {
     public double getTemp() {
         return drive.getTemp();
     }
-
 }
