@@ -9,9 +9,8 @@ package frc.robot;
 import frc.robot.Constants.*;
 
 // Import Subsystems
-import frc.robot.Actors.Subsystems.Intake;
-import frc.robot.Actors.Subsystems.Drivetrain;
-
+import frc.robot.Actors.Subsystems.*;
+import frc.robot.Commands.Drivetrain.ResetIMU;
 // Import Commands
 // import frc.robot.commands.auto.Autos;
 import frc.robot.Commands.Intake.*;
@@ -51,9 +50,9 @@ public class RobotContainer {
           // Multiply by max speed to map the joystick unitless inputs to actual units.
           // This will map the [-1, 1] to [max speed backwards, max speed forwards],
           // converting them to actual units.
-          driverController.getLeftY(),
+          -driverController.getLeftY(),
           driverController.getLeftX(),
-          driverController.getRightX()
+          -driverController.getRightX()
         ), drivetrain
       )
     );
@@ -69,6 +68,9 @@ public class RobotContainer {
    * joysticks}.
    */
   private void configureBindings() {
+
+    driverController.pov(180).debounce(1).onTrue(new ResetIMU(drivetrain));
+
     // Schedule `IntakeCoralCommand` when the Xbox controller's leftBumper button is pressed, cancel on release
     // Schedule `OuttakeCoralCommand` when the Xbox controller's leftTrigger button is pressed, cancel on release
     manipulatorController.leftBumper().whileTrue(new IntakeCoralCommand(intake));

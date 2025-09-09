@@ -171,7 +171,7 @@ public class Drivetrain extends SubsystemBase {
     }
 
     /** Zeroes the heading of the robot. */
-    public void zeroHeading() {
+    public void resetIMU() {
         this.pigeon.reset();
     }
 }
