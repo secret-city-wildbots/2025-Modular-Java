@@ -1,153 +1,177 @@
 package frc.robot.Actors.Subsystems;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.Optional;
-
+// Import CTRE Hardware Libraries
 import com.ctre.phoenix6.hardware.Pigeon2;
 
-import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
+// Import WPI Libraries to help Swerve Drive Management
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
+import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+
+// Import Constants and Utils
+import frc.robot.Utils.*;
+import frc.robot.Constants.*;
+
+// Import Subsystems
 import frc.robot.Actors.SwerveModule;
 import frc.robot.Actors.SwerveModules;
+
+// Import States
 import frc.robot.States.DrivetrainState;
-import frc.robot.Utils.Limelight;
-import frc.robot.Utils.LimelightHelpers.PoseEstimate;
+
 
 public class Drivetrain extends SubsystemBase {
 
-    // dependent on robot
-    public double[] maxGroundSpeed_mPs;
-    public double[] maxRotateSpeed_radPs;
-    public double robotWidth_m;
-    public double robotLength_m;
-    public Translation2d[] swerveModuleLocations_m;
-    public Limelight[] limelights;
-
-    // big boy objects
-    public SwerveModules swerveModules;
+    // Inertial Measurement Unit
     private Pigeon2 pigeon;
-    private final SwerveDriveKinematics kinematics;
-    public SwerveDrivePoseEstimator poseEstimator;
+
+    // Swerve Modules
+    private SwerveModules swerveModules; // Helper class to help easily manage the individual swerve modules
+    private Translation2d[] swerveModuleLocations_m; // Used to hold the position of the swerve modules with respect to the center of the robot
+    private SwerveDriveOdometry odometry;
+    private final SwerveDriveKinematics swerveKinematics;
 
     // state
+    // TODO: Need to investigate how to use this as it is not currently used
     public DrivetrainState state = new DrivetrainState();
     public SwerveModuleState[] moduleStates;
 
-    // random
-    private Rotation2d imuOffset = new Rotation2d();
-
-    public Drivetrain(Pigeon2 pigeon, Limelight[] limelights, double robotWidth_m, double robotLength_m,
-            Translation2d[] swerveModuleLocations_m, double[] maxGroundSpeed_mPs, double[] driveGearRatios,
-            double azimuthGearRatio, double wheelRadius_m) {
-
-        // set properties of this drivetrain
-        this.swerveModuleLocations_m = swerveModuleLocations_m;
-        this.robotWidth_m = robotWidth_m;
-        this.robotLength_m = robotLength_m;
-        this.maxGroundSpeed_mPs = maxGroundSpeed_mPs;
-        this.limelights = limelights;
+    public Drivetrain() {
+        /*
+         * Setup auxillary sensors and components to help with the drivetrain
+         */
 
         // pigeon
-        this.pigeon = pigeon;
+        this.pigeon = new Pigeon2(6);
 
-        imuOffset = pigeon.getRotation2d();
+        // Define the swerve modules
+        // TODO: Test changing the numbers back to how we did last year. Found out how to display the swerves correctly on AdvantageScope
+        this.swerveModules = new SwerveModules(
+            new SwerveModule[] {
+                new SwerveModule(1, Swerve.swerveModuleDriveConfigs()[1], Swerve.swerveModuleAzimuthConfigs()[1]),
+                new SwerveModule(0, Swerve.swerveModuleDriveConfigs()[0], Swerve.swerveModuleAzimuthConfigs()[0]),
+                new SwerveModule(2, Swerve.swerveModuleDriveConfigs()[2], Swerve.swerveModuleAzimuthConfigs()[2]),
+                new SwerveModule(3, Swerve.swerveModuleDriveConfigs()[3], Swerve.swerveModuleAzimuthConfigs()[3])
+            }
+        );
 
-        // this wizardy is needed to create 1 maxRotateSpeed for every maxGroundSpeed
-        this.maxRotateSpeed_radPs = new double[maxGroundSpeed_mPs.length];
-        for (int i = 0; i < maxGroundSpeed_mPs.length; i++) {
-            maxRotateSpeed_radPs[i] = maxGroundSpeed_mPs[i]
-                    / ((Math.hypot(robotLength_m, robotWidth_m)));
-        }
+        /*
+         * Setup the module locations with respect to the center of the robot. To calculate the center of the modules we
+         * take have the module to module length and width. We also need to take into consideration the coordinate system
+         * of WPILib. That can be found
+         * here: https://docs.wpilib.org/en/stable/docs/software/basic-programming/coordinate-system.html#coordinate-system
+         */
+        // TODO: Test changing the numbers back to how we did last year. Found out how to display the swerves correctly on AdvantageScope
+        this.swerveModuleLocations_m = new Translation2d[4];
+        // Module 0 should be +X and -Y (Front Right - FR)
+        this.swerveModuleLocations_m[1] = new Translation2d(
+            Units.inchesToMeters(DrivetrainConstants.moduleToModuleLength_X_in / 2.0),
+            Units.inchesToMeters(-DrivetrainConstants.moduleToModuleWidth_Y_in / 2.0)
+        );
+        // Module 1 should be +X and +Y (Front Left - FL)
+        this.swerveModuleLocations_m[0] = new Translation2d(
+            Units.inchesToMeters(DrivetrainConstants.moduleToModuleLength_X_in / 2.0),
+            Units.inchesToMeters(DrivetrainConstants.moduleToModuleWidth_Y_in / 2.0)
+        );
+        // Module 2 should be -X and +Y (Back Left - BL)
+        this.swerveModuleLocations_m[2] = new Translation2d(
+            Units.inchesToMeters(-DrivetrainConstants.moduleToModuleLength_X_in / 2.0),
+            Units.inchesToMeters(DrivetrainConstants.moduleToModuleWidth_Y_in / 2.0)
+        );
+        // Module 3 should be -X and -Y (Back Right - BR)
+        this.swerveModuleLocations_m[3] = new Translation2d(
+            Units.inchesToMeters(-DrivetrainConstants.moduleToModuleLength_X_in / 2.0),
+            Units.inchesToMeters(-DrivetrainConstants.moduleToModuleWidth_Y_in / 2.0)
+        );
 
-        this.swerveModules = new SwerveModules(new SwerveModule[] {
-                new SwerveModule(0, driveGearRatios, azimuthGearRatio, wheelRadius_m),
-                new SwerveModule(1, driveGearRatios, azimuthGearRatio, wheelRadius_m),
-                new SwerveModule(2, driveGearRatios, azimuthGearRatio, wheelRadius_m),
-                new SwerveModule(3, driveGearRatios, azimuthGearRatio, wheelRadius_m)
-        });
+        // Setup the swerve drive kinematics
+        this.swerveKinematics = new SwerveDriveKinematics(this.swerveModuleLocations_m);
 
-        this.kinematics = new SwerveDriveKinematics(swerveModuleLocations_m);
+        // Setup the odometry tracking
+        this.odometry = new SwerveDriveOdometry(
+          this.swerveKinematics,
+          this.pigeon.getRotation2d(),
+          swerveModules.getPosition()
+        );
+    }
 
-        poseEstimator = new SwerveDrivePoseEstimator(
-                kinematics,
-                getIMURotation(),
-                swerveModules.getPosition(),
-                new Pose2d());
+    @Override
+    public void periodic() {
+        // Update the odometry in the periodic block
+        this.odometry.update(
+            this.pigeon.getRotation2d(),
+            this.swerveModules.getPosition()
+        );
     }
 
     /**
-     * Gets the current 2d rotation of the pigeon
+     * gets the current pose from the swerve odometry.
      * 
-     * @return a Rotation2d containing the current angle of the pigeon
+     * @return Pose2d
      */
-    public Rotation2d getIMURotation() {
-        return pigeon.getRotation2d().minus(imuOffset);
+    public Pose2d getPose() {
+        return this.odometry.getPoseMeters();
     }
 
     /**
      * Resets the odometry to the specified pose.
-     * Used for autoBuilder (pathplanner) and dashboard pos setter
      *
      * @param pose The pose to which to set the odometry.
      */
-    public void resetPose(Pose2d pose) {
-        imuOffset = pigeon.getRotation2d();
-        imuOffset = imuOffset.minus(pose.getRotation());
-        poseEstimator.resetRotation(getIMURotation());
-        poseEstimator.resetPose(pose);
-        poseEstimator.resetRotation(getIMURotation());
-        poseEstimator.resetPose(pose);
+    public void resetOdometry(Pose2d pose) {
+        this.odometry.resetPosition(
+            this.pigeon.getRotation2d(),
+            this.swerveModules.getPosition(),    
+            pose
+        );
     }
 
     /**
-     * resets the IMU offset to the current rotation of the robot
+     * drive the drivetrain at an x, y and h power field relative
+     * 
+     * @param xpow        power to drive at in field relative x
+     * @param ypow        power to drive at in field relative y
+     * @param hpow        power to change the heading (spin) at
      */
-    public void resetIMU() {
-        imuOffset = pigeon.getRotation2d();
-        poseEstimator.resetRotation(getIMURotation());
-        poseEstimator.update(getIMURotation(), swerveModules.getPosition());
-    }
-
-    /**
-     * Read the sensor values and update the state to allow
-     * the current position and rotation to be updated
-     */
-    public void updateState() {
-        moduleStates = swerveModules.getCurrentState();
-        ChassisSpeeds currentSpeeds = kinematics.toChassisSpeeds(moduleStates);
-
-        double currentDriveSpeed_mPs = Math
-                .sqrt(Math.pow(currentSpeeds.vxMetersPerSecond, 2) + Math.pow(currentSpeeds.vyMetersPerSecond, 2));
-
-        this.state.updateState(currentDriveSpeed_mPs, getIMURotation());
-
-        poseEstimator.update(getIMURotation(), swerveModules.getPosition());
-
-        if (limelights.length == 1) {
-        } else if (limelights.length >= 2) {
-            ArrayList<PoseEstimate> posEstimates = new ArrayList<PoseEstimate>();
-            for (Limelight limelight : limelights) {
-                Optional<PoseEstimate> pos = limelight.getPosEstimate(getIMURotation());
-                if (pos.isPresent()) {
-                    posEstimates.add(pos.get());
-                }
-            }
-
-            //get the best estimate if multiple are present, else do the only one
-            if (posEstimates.size() >= 2) {
-                 PoseEstimate[] posEstimatesArr = posEstimates.toArray(new PoseEstimate[posEstimates.size()]);
-                PoseEstimate best = Arrays.stream(posEstimatesArr)
-                    .max(Comparator.comparingDouble(o -> o.avgTagDist))
-                    .orElse(null);
-            }
+    public void drive(double xpow, double ypow, double hpow) {
+        /**
+         * This handles the issue where the xpow and ypow are values that end up in the shaded (unreal areas) of a circumscribed square
+         * We caclulate the hypotenuse and if it ends up in the area between the square and circle (> 1), then we divide the values
+         * by the hypotenuse to get them in a valid range. If we don't do this, then the swerveKinematics.toSwerveModuleStates will seem
+         * to not be "reacting" to the controller changes
+         */
+        double hyp = Math.hypot(xpow, ypow);
+        if (hyp > 1.0){
+          ypow /= hyp;
+          xpow /= hyp;
         }
+
+        // Calculate the swerve module states (drive and azimuth motor commands) based on the controller inputs and the max ground and rotate speeds
+        SwerveModuleState[] moduleStateOutputs = this.swerveKinematics.toSwerveModuleStates(
+            ChassisSpeeds.discretize(ChassisSpeeds.fromFieldRelativeSpeeds(
+                xpow * DrivetrainConstants.maxGroundSpeed_mPs,
+                ypow * DrivetrainConstants.maxGroundSpeed_mPs,
+                hpow * DrivetrainConstants.maxRotateSpeed_radPs,
+                this.pigeon.getRotation2d()
+                ),
+                0.001 * RobotConstants.loopTime_ms
+            )
+        );
+
+        // Renormalizes the wheel speeds if any individual speed is above the specified maximum. 
+        SwerveDriveKinematics.desaturateWheelSpeeds(moduleStateOutputs, DrivetrainConstants.maxGroundSpeed_mPs);
+
+        // Send the commands to the swerve modules
+        swerveModules.pushModuleStates(moduleStateOutputs, DrivetrainConstants.maxGroundSpeed_mPs);
+    }
+
+    /** Zeroes the heading of the robot. */
+    public void resetIMU() {
+        this.pigeon.reset();
     }
 }

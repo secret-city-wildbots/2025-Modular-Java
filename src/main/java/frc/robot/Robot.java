@@ -6,20 +6,15 @@ package frc.robot;
 
 // Import External Libraries
 import edu.wpi.first.wpilibj.TimedRobot;
-import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 
-// Import Custom Libraries
-import frc.robot.Actors.Motor;
-import frc.robot.Actors.Subsystems.Intake;
-import frc.robot.Utils.MotorType;
-import frc.robot.Utils.RotationDir;
-
 /**
  * The methods in this class are called automatically corresponding to each
- * mode, as described in the TimedRobot documentation. If you change the name of this class or the
- * package after creating this project, you must also update the Main.java file in the project.
+ * mode, as described in the TimedRobot documentation. If you change the name of
+ * this class or the
+ * package after creating this project, you must also update the Main.java file
+ * in the project.
  */
 public class Robot extends TimedRobot {
 
@@ -32,7 +27,10 @@ public class Robot extends TimedRobot {
    * for any initialization code.
    */
   public Robot() {
+    // Instantiate our RobotContainer.  This will perform all our button bindings, and put our
+    // autonomous chooser on the dashboard.
     m_robotContainer = new RobotContainer();
+    m_robotContainer.toString();
   }
 
   @Override
@@ -42,12 +40,14 @@ public class Robot extends TimedRobot {
     // and running subsystem periodic() methods.  This must be called from the robot's periodic
     // block in order for anything in the Command-based framework to work.
     CommandScheduler.getInstance().run();
+
   }
 
   @Override
   public void autonomousInit() {
     // TODO: Setup the configuration and selection of the autonomous command
-    // TODO: Uncomment the line below for the setup and put in the proper code to make it function correctly.
+    // TODO: Uncomment the line below for the setup and put in the proper code to
+    // make it function correctly.
     // autonomousCommand = m_robotContainer.getAutonomousCommand();
 
     // schedule the autonomous command (example)
@@ -57,8 +57,7 @@ public class Robot extends TimedRobot {
   }
 
   @Override
-  public void autonomousPeriodic() {
-  }
+  public void autonomousPeriodic() {}
 
   @Override
   public void teleopInit() {
@@ -72,31 +71,23 @@ public class Robot extends TimedRobot {
   }
 
   @Override
-  public void teleopPeriodic() {
-    
-  }
+  public void teleopPeriodic() {}
 
   @Override
-  public void disabledInit() {
-  }
+  public void disabledInit() {}
 
   @Override
-  public void disabledPeriodic() {
-  }
+  public void disabledPeriodic() {}
 
   @Override
-  public void testInit() {
-  }
+  public void testInit() {}
 
   @Override
-  public void testPeriodic() {
-  }
+  public void testPeriodic() {}
 
   @Override
-  public void simulationInit() {
-  }
+  public void simulationInit() {}
 
   @Override
-  public void simulationPeriodic() {
-  }
+  public void simulationPeriodic() {}
 }
