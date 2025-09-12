@@ -48,7 +48,7 @@ public class SwerveModule extends SubsystemBase {
         this.azimuth.applyTalonFxConfig(azimuthMotorConfig);
 
         // Setup the Azimuth PID
-        this.azimuth.pid(0.12, 0.0, 0.0);
+        this.azimuth.pid(0.15, 0.0, 0.0);
     }
 
     /**
