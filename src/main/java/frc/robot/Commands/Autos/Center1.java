@@ -14,6 +14,8 @@ import frc.robot.Commands.pivot.PivotToPositionCommand;
 public class Center1 extends SequentialCommandGroup {
     // Real Variables
     public Center1(Drivetrain drivetrain, Intake intake, Pivot pivot) {
+        // Reset IMU
+        drivetrain.resetIMU();
         // Assign the variables and add the subsystem as a requirement to the command
         addRequirements(drivetrain, intake, pivot);
         addCommands(
