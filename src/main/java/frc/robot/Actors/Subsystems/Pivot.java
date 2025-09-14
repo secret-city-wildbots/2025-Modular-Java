@@ -159,21 +159,17 @@ public class Pivot extends SubsystemBase {
 
         // Logging to console code
         // TODO: Remove when done testing
-        System.out.print(Math.round(getAngleDegrees()));
-        System.out.print("; ");
-        System.out.print((Math.round(this.targetAngle_deg)));
-        System.out.print("; ");
-        System.out.println(Math.round(motorOutput*100.0)/100.0);
-    }
-
-    public void die() {
-        motor.dc(0.0);
+        // System.out.print(Math.round(getAngleDegrees()));
+        // System.out.print("; ");
+        // System.out.print((Math.round(this.targetAngle_deg)));
+        // System.out.print("; ");
+        // System.out.println(Math.round(motorOutput*100.0)/100.0);
     }
 
     @Override
     public void periodic() {
         // Logging to console code
         // TODO: Remove when done testing
-        System.out.println(Math.round(this.getAngleDegrees()));
+        //System.out.println(Math.round(this.getAngleDegrees()));
     }
 }
