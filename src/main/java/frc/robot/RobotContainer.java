@@ -12,8 +12,9 @@ import frc.robot.Constants.*;
 import frc.robot.Actors.Subsystems.Intake;
 import frc.robot.Actors.Subsystems.Pivot;
 import frc.robot.Actors.Subsystems.Drivetrain;
-import frc.robot.Commands.Autos.Center1;
+
 // Import Commands
+import frc.robot.Commands.Autos.Center1;
 import frc.robot.Commands.Drivetrain.ResetIMU;
 import frc.robot.Commands.Drivetrain.TeleopDrive;
 import frc.robot.Commands.Intake.IntakeAlgaeCommand;
@@ -21,7 +22,6 @@ import frc.robot.Commands.Intake.IntakeCoralCommand;
 import frc.robot.Commands.Intake.OuttakeAlgaeCommand;
 import frc.robot.Commands.Intake.OuttakeCoralCommand;
 import frc.robot.Commands.pivot.PivotToPositionCommand;
-// import frc.robot.commands.auto.Autos;
 
 // Import WPILib Command Libraries
 import edu.wpi.first.wpilibj2.command.button.Trigger;
