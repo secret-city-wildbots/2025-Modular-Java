@@ -48,7 +48,7 @@ public class Robot extends TimedRobot {
     // TODO: Setup the configuration and selection of the autonomous command
     // TODO: Uncomment the line below for the setup and put in the proper code to
     // make it function correctly.
-    // autonomousCommand = m_robotContainer.getAutonomousCommand();
+    autonomousCommand = m_robotContainer.getAutonomousCommand();
 
     // schedule the autonomous command (example)
     if (autonomousCommand != null) {

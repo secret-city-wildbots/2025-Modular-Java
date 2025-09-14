@@ -12,7 +12,7 @@ import frc.robot.Constants.*;
 import frc.robot.Actors.Subsystems.Intake;
 import frc.robot.Actors.Subsystems.Pivot;
 import frc.robot.Actors.Subsystems.Drivetrain;
-
+import frc.robot.Commands.Autos.Center1;
 // Import Commands
 import frc.robot.Commands.Drivetrain.ResetIMU;
 import frc.robot.Commands.Drivetrain.TeleopDrive;
@@ -25,6 +25,7 @@ import frc.robot.Commands.pivot.PivotToPositionCommand;
 
 // Import WPILib Command Libraries
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 
 /**
@@ -87,5 +88,9 @@ public class RobotContainer {
     manipulatorController.b().onTrue(new PivotToPositionCommand(pivot, 20.0));
     manipulatorController.y().onTrue(new PivotToPositionCommand(pivot, 138.0));
     manipulatorController.leftBumper().onTrue(new PivotToPositionCommand(pivot, 110.0));
+  }
+
+  public Command getAutonomousCommand() {
+    return new Center1(drivetrain, intake, pivot);
   }
 }
