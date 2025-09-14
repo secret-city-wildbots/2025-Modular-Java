@@ -108,7 +108,7 @@ public class Drivetrain extends SubsystemBase {
             this.swerveModules.getPosition()
         );
 
-        System.out.println(this.pigeon.getRotation2d().unaryMinus().getDegrees());
+        //System.out.println(this.pigeon.getRotation2d().unaryMinus().getDegrees());
     }
 
     /**

@@ -80,6 +80,7 @@ public class Robot extends TimedRobot {
 
   @Override
   public void disabledPeriodic() {
+    RobotContainer.pivot.die();
   }
 
   @Override

@@ -22,7 +22,7 @@ public class Pivot extends SubsystemBase {
 
     // Soft Limits
     private double minAngle_deg = 4.0; // max back
-    private double maxAngle_deg = 110.0; // max front
+    private double maxAngle_deg = 194.0; // max front
 
     // PID Controller
     private PIDController pid;
@@ -144,7 +144,7 @@ public class Pivot extends SubsystemBase {
         double motorOutput = pid.calculate(getAngleDegrees(), this.targetAngle_deg);
 
         // Clamp output to safe range [-1.0, 1.0]
-        motorOutput = Math.max(-0.3, Math.min(0.3, motorOutput));
+        motorOutput = Math.max(-0.5, Math.min(0.5, motorOutput));
 
         // Enforce soft limits: prevent movement beyond range
         if (isAtUpperLimit() && motorOutput > 0) {
@@ -164,6 +164,10 @@ public class Pivot extends SubsystemBase {
         System.out.print((Math.round(this.targetAngle_deg)));
         System.out.print("; ");
         System.out.println(Math.round(motorOutput*100.0)/100.0);
+    }
+
+    public void die() {
+        motor.dc(0.0);
     }
 
     @Override

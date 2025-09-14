@@ -56,12 +56,12 @@ public class RobotContainer {
     );
   }
 
-  /**
-   * Use this method to define your trigger->command mappings. Triggers can be created via the
+  /**e this method to define your trigger->command mappings. Triggers can be created via the
    * {@link Trigger#Trigger(java.util.function.BooleanSupplier)} constructor with an arbitrary
    * predicate, or via the named factories in {@link
    * edu.wpi.first.wpilibj2.command.button.CommandGenericHID}'s subclasses for {@link
-   * CommandXboxController Xbox}/{@link edu.wpi.first.wpilibj2.command.button.CommandPS4Controller
+   * CommandXboxController Xbox}
+   * /{@link edu.wpi.first.wpilibj2.command.button.CommandPS4Controller
    * PS4} controllers or {@link edu.wpi.first.wpilibj2.command.button.CommandJoystick Flight
    * joysticks}.
    */
@@ -84,7 +84,7 @@ public class RobotContainer {
     manipulatorController.button(7).onTrue(new PivotToPositionCommand(pivot, 194.0));
     manipulatorController.button(8).onTrue(new PivotToPositionCommand(pivot, 140.0));
     manipulatorController.a().onTrue(new PivotToPositionCommand(pivot, 5.0));
-    manipulatorController.b().onTrue(new PivotToPositionCommand(pivot, 10.0));
+    manipulatorController.b().onTrue(new PivotToPositionCommand(pivot, 20.0));
     manipulatorController.y().onTrue(new PivotToPositionCommand(pivot, 138.0));
     manipulatorController.leftBumper().onTrue(new PivotToPositionCommand(pivot, 110.0));
   }
